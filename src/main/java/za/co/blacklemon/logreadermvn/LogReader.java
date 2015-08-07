@@ -5,9 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.log4j.Logger;
 import static org.fusesource.jansi.Ansi.*;
 import static org.fusesource.jansi.Ansi.Color.*;
@@ -20,12 +17,15 @@ import org.fusesource.jansi.AnsiConsole;
 public class LogReader {
 
     private static Logger log = Logger.getLogger(LogReader.class);
-    private static String fileName = "D:\\Server\\wildfly-8.1.0.Final\\standalone\\log\\server.log";
+    private static String FILENAME = "D:\\Server\\wildfly-8.1.0.Final\\standalone\\log\\server.log";
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        String fileName = FILENAME;
+        if(args.length > 0)
+            fileName = args[0];
         readFile(fileName);
     }
 
@@ -40,7 +40,7 @@ public class LogReader {
 
 //            System.out.println(ansi().fg(RED).a("Hello World").reset());
 //            System.out.println("My Name is Raman");
-            in.skip(in.available() - 10000);
+            in.skip(in.available() - 100000);
             int c;
             StringBuilder sb = null;
             while (1 == 1) {
@@ -50,16 +50,29 @@ public class LogReader {
                     sb.append(new String(b, Charset.forName("UTF-8")));
                 }
 
+                Color color = null;
                 if (sb.length() > 0) {
-                    String str = sb.toString();
-                    if (str.indexOf(" WARN ") == 23) {
-                        out.println(ansi().fg(YELLOW).a(str).reset());
-                    } else if (str.indexOf(" FATAL ") == 23 ) {
-                        out.println(ansi().fg(RED).bg(WHITE).a(str).reset());
-                    } else if (str.indexOf(" ERROR ") == 23 ) {
-                        out.println(ansi().fg(RED).a(str).reset());
-                    } else {
-                        out.println(str);
+                    String[] lines = sb.toString().split("\n");
+                    for (String str : lines) {
+                        if (str.indexOf(" INFO ") == 23) {
+                            color = null;
+                        } else if (str.indexOf(" WARN ") == 23) {
+                            color = YELLOW;
+                            //out.println(ansi().fg(YELLOW).a(str).reset());
+                        } else if (str.indexOf(" FATAL ") == 23) {
+                            color = RED;
+                            //out.println(ansi().fg(RED).bg(WHITE).a(str).reset());
+                        } else if (str.indexOf(" ERROR ") == 23) {
+                            color = RED;
+                            //out.println(ansi().fg(RED).a(str).reset());
+                        } else {
+                            //out.println(str);
+                        }
+                        if(color != null) {
+                            out.println(ansi().fg(color).a(str).reset());
+                        } else {
+                            out.println(ansi().a(str));
+                        }
                     }
                 }
             }
